@@ -108,39 +108,48 @@ bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
   return true;
 }
 
-/*bool ReadImageToDatum(const string& filename, const int label,
+bool ReadImage(const string& filename,
     const int height, const int width, const bool is_color, Datum* datum) {
+  cv::Mat cv_img;
 
-  CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
-
-  if (datum->label_size() > 0){
-    datum->set_label(0,label);
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  if (height > 0 && width > 0) {
+    cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
+    cv::resize(cv_img_origin, cv_img, cv::Size(height, width));
   } else {
-    datum->add_label(label);
+    cv_img = cv::imread(filename, cv_read_flag);
   }
-
-  return true;
-}*/
-
-/*bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
-    const int height, const int width, const bool is_color, Datum* datum) {
-
-  if (labels.size() > 0) {
-    CHECK(ReadImageToDatum(filename, labels[0],
-                         height, width, is_color, datum));
-    for (int i = 1 ; i < labels.size(); ++i) {
-      if (datum->label_size() <= i) {
-        datum->add_label(labels[i]);
-      } else {
-        datum->set_label(i,labels[i]);
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return false;
+  }
+  int num_channels = (is_color ? 3 : 1);
+  datum->set_channels(num_channels);
+  datum->set_height(cv_img.rows);
+  datum->set_width(cv_img.cols);
+  datum->clear_data();
+  datum->clear_float_data();
+  string* datum_string = datum->mutable_data();
+  if (is_color) {
+    for (int c = 0; c < num_channels; ++c) {
+      for (int h = 0; h < cv_img.rows; ++h) {
+        for (int w = 0; w < cv_img.cols; ++w) {
+          datum_string->push_back(
+            static_cast<char>(cv_img.at<cv::Vec3b>(h, w)[c]));
+        }
       }
     }
-  } else {
-    CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
+  } else {  // Faster than repeatedly testing is_color for each pixel w/i loop
+    for (int h = 0; h < cv_img.rows; ++h) {
+      for (int w = 0; w < cv_img.cols; ++w) {
+        datum_string->push_back(
+          static_cast<char>(cv_img.at<uchar>(h, w)));
+        }
+      }
   }
-
   return true;
-}*/
+}
 
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width) {
@@ -228,6 +237,7 @@ cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
   }
   return cv_img;
 }
+
 cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   cv::Mat cv_img;
   CHECK(datum.encoded()) << "Datum not encoded";
@@ -290,7 +300,40 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 }
 #endif  // USE_OPENCV
 
-/*
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  CHECK(ReadImage(filename, height, width, is_color, datum));
+
+  if (datum->label_size() > 0){
+    datum->set_label(0,label);
+  } else {
+    datum->add_label(label);
+  }
+
+  return true;
+}
+
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (labels.size() > 0) {
+    CHECK(ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum));
+    for (int i = 1 ; i < labels.size(); ++i) {
+      if (datum->label_size() <= i) {
+        datum->add_label(labels[i]);
+      } else {
+        datum->set_label(i,labels[i]);
+      }
+    }
+  } else {
+    CHECK(ReadImage(filename, height, width, is_color, datum));
+  }
+
+  return true;
+}
+
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
@@ -316,50 +359,6 @@ void hdf5_load_nd_dataset_helper(
     (dims.size() > 1) ? dims[1] : 1,
     (dims.size() > 2) ? dims[2] : 1,
     (dims.size() > 3) ? dims[3] : 1);
-}*/
-
-/*template <>
-void hdf5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<float>* blob) {
-  hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
-  herr_t status = H5LTread_dataset_float(
-    file_id, dataset_name_, blob->mutable_cpu_data());
-  CHECK_GE(status, 0) << "Failed to read float dataset " << dataset_name_;
 }
-
-template <>
-void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<double>* blob) {
-  hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
-  herr_t status = H5LTread_dataset_double(
-    file_id, dataset_name_, blob->mutable_cpu_data());
-  CHECK_GE(status, 0) << "Failed to read double dataset " << dataset_name_;
-}
-
-template <>
-void hdf5_save_nd_dataset<float>(
-    const hid_t file_id, const string dataset_name, const Blob<float>& blob) {
-  hsize_t dims[HDF5_NUM_DIMS];
-  dims[0] = blob.num();
-  dims[1] = blob.channels();
-  dims[2] = blob.height();
-  dims[3] = blob.width();
-  herr_t status = H5LTmake_dataset_float(
-      file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
-  CHECK_GE(status, 0) << "Failed to make float dataset " << dataset_name;
-}
-
-template <>
-void hdf5_save_nd_dataset<double>(
-    const hid_t file_id, const string dataset_name, const Blob<double>& blob) {
-  hsize_t dims[HDF5_NUM_DIMS];
-  dims[0] = blob.num();
-  dims[1] = blob.channels();
-  dims[2] = blob.height();
-  dims[3] = blob.width();
-  herr_t status = H5LTmake_dataset_double(
-      file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
-  CHECK_GE(status, 0) << "Failed to make double dataset " << dataset_name;
-}*/
 
 }  // namespace caffe

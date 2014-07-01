@@ -67,6 +67,105 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
     db->Close();
   }
 
+  // Fill the LevelDB with data: if unique_pixels, each pixel is unique but
+  // all images are the same; else each image is unique but all pixels within
+  // an image are the same.
+  void FillLevelDB(const bool unique_pixels, const bool multilabel=false) {
+    backend_ = DataParameter_DB_LEVELDB;
+    LOG(INFO) << "Using temporary leveldb " << *filename_;
+    leveldb::DB* db;
+    leveldb::Options options;
+    options.error_if_exists = true;
+    options.create_if_missing = true;
+    leveldb::Status status =
+        leveldb::DB::Open(options, filename_->c_str(), &db);
+    CHECK(status.ok());
+    for (int i = 0; i < 5; ++i) {
+      Datum datum;
+      if (multilabel) {
+        for (int l = 0; l < 5; ++l) {
+          if (l == i) {
+            datum.add_label(1);
+          } else {
+            datum.add_label(-1);
+          }
+        }
+      } else {
+        datum.add_label(i);  
+      }
+      datum.set_channels(2);
+      datum.set_height(3);
+      datum.set_width(4);
+      std::string* data = datum.mutable_data();
+      for (int j = 0; j < 24; ++j) {
+        int datum = unique_pixels ? j : i;
+        data->push_back(static_cast<uint8_t>(datum));
+      }
+      stringstream ss;
+      ss << i;
+      db->Put(leveldb::WriteOptions(), ss.str(), datum.SerializeAsString());
+    }
+    delete db;
+  }
+
+  // Fill the LMDB with data: unique_pixels has same meaning as in FillLevelDB.
+  void FillLMDB(const bool unique_pixels, const bool multilabel=false) {
+    backend_ = DataParameter_DB_LMDB;
+    LOG(INFO) << "Using temporary lmdb " << *filename_;
+    CHECK_EQ(mkdir(filename_->c_str(), 0744), 0) << "mkdir " << filename_
+                                                 << "failed";
+    MDB_env *env;
+    MDB_dbi dbi;
+    MDB_val mdbkey, mdbdata;
+    MDB_txn *txn;
+    CHECK_EQ(mdb_env_create(&env), MDB_SUCCESS) << "mdb_env_create failed";
+    CHECK_EQ(mdb_env_set_mapsize(env, 1099511627776), MDB_SUCCESS)  // 1TB
+        << "mdb_env_set_mapsize failed";
+    CHECK_EQ(mdb_env_open(env, filename_->c_str(), 0, 0664), MDB_SUCCESS)
+        << "mdb_env_open failed";
+    CHECK_EQ(mdb_txn_begin(env, NULL, 0, &txn), MDB_SUCCESS)
+        << "mdb_txn_begin failed";
+    CHECK_EQ(mdb_open(txn, NULL, 0, &dbi), MDB_SUCCESS) << "mdb_open failed";
+
+    for (int i = 0; i < 5; ++i) {
+      Datum datum;
+      if (multilabel) {
+        for (int l = 0; l < 5; ++l) {
+          if (l == i) {
+            datum.add_label(1);
+          } else {
+            datum.add_label(-1);
+          }
+        }
+      } else {
+        datum.add_label(i);  
+      }
+      datum.set_channels(2);
+      datum.set_height(3);
+      datum.set_width(4);
+      std::string* data = datum.mutable_data();
+      for (int j = 0; j < 24; ++j) {
+        int datum = unique_pixels ? j : i;
+        data->push_back(static_cast<uint8_t>(datum));
+      }
+      stringstream ss;
+      ss << i;
+
+      string value;
+      datum.SerializeToString(&value);
+      mdbdata.mv_size = value.size();
+      mdbdata.mv_data = reinterpret_cast<void*>(&value[0]);
+      string keystr = ss.str();
+      mdbkey.mv_size = keystr.size();
+      mdbkey.mv_data = reinterpret_cast<void*>(&keystr[0]);
+      CHECK_EQ(mdb_put(txn, dbi, &mdbkey, &mdbdata, 0), MDB_SUCCESS)
+          << "mdb_put failed";
+    }
+    CHECK_EQ(mdb_txn_commit(txn), MDB_SUCCESS) << "mdb_txn_commit failed";
+    mdb_close(env, dbi);
+    mdb_env_close(env);
+  }
+
   void TestRead() {
     const Dtype scale = 3;
     LayerParameter param;
