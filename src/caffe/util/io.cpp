@@ -88,6 +88,60 @@ cv::Mat ReadImageToCVMat(const string& filename,
   return cv_img;
 }
 
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (labels.size() > 0) {
+    CHECK(ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum));
+    for (int i = 1 ; i < labels.size(); ++i) {
+      if (datum->label_size() <= i) {
+        datum->add_label(labels[i]);
+      } else {
+        datum->set_label(i,labels[i]);
+      }
+    }
+  } else {
+    CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
+  }
+
+  return true;
+}
+
+bool ReadImageToDatum(const string& filename, const int label,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
+
+  if (datum->label_size() > 0){
+    datum->set_label(0,label);
+  } else {
+    datum->add_label(label);
+  }
+
+  return true;
+}
+
+bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
+    const int height, const int width, const bool is_color, Datum* datum) {
+
+  if (labels.size() > 0) {
+    CHECK(ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum));
+    for (int i = 1 ; i < labels.size(); ++i) {
+      if (datum->label_size() <= i) {
+        datum->add_label(labels[i]);
+      } else {
+        datum->set_label(i,labels[i]);
+      }
+    }
+  } else {
+    CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
+  }
+
+  return true;
+}
+
 cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width) {
   return ReadImageToCVMat(filename, height, width, true);
@@ -235,4 +289,76 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   datum->set_data(buffer);
 }
 #endif  // USE_OPENCV
+
+// Verifies format of data stored in HDF5 file and reshapes blob accordingly.
+template <typename Dtype>
+void hdf5_load_nd_dataset_helper(
+    hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
+    Blob<Dtype>* blob) {
+  // Verify that the number of dimensions is in the accepted range.
+  herr_t status;
+  int ndims;
+  status = H5LTget_dataset_ndims(file_id, dataset_name_, &ndims);
+  CHECK_GE(ndims, min_dim);
+  CHECK_LE(ndims, max_dim);
+
+  // Verify that the data format is what we expect: float or double.
+  std::vector<hsize_t> dims(ndims);
+  H5T_class_t class_;
+  status = H5LTget_dataset_info(
+      file_id, dataset_name_, dims.data(), &class_, NULL);
+  CHECK_GE(status, 0) << "Failed to get dataset info for " << dataset_name_;
+  CHECK_EQ(class_, H5T_FLOAT) << "Expected float or double data";
+
+  blob->Reshape(
+    dims[0],
+    (dims.size() > 1) ? dims[1] : 1,
+    (dims.size() > 2) ? dims[2] : 1,
+    (dims.size() > 3) ? dims[3] : 1);
+}
+
+template <>
+void hdf5_load_nd_dataset<float>(hid_t file_id, const char* dataset_name_,
+        int min_dim, int max_dim, Blob<float>* blob) {
+  hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
+  herr_t status = H5LTread_dataset_float(
+    file_id, dataset_name_, blob->mutable_cpu_data());
+  CHECK_GE(status, 0) << "Failed to read float dataset " << dataset_name_;
+}
+
+template <>
+void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
+        int min_dim, int max_dim, Blob<double>* blob) {
+  hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob);
+  herr_t status = H5LTread_dataset_double(
+    file_id, dataset_name_, blob->mutable_cpu_data());
+  CHECK_GE(status, 0) << "Failed to read double dataset " << dataset_name_;
+}
+
+template <>
+void hdf5_save_nd_dataset<float>(
+    const hid_t file_id, const string dataset_name, const Blob<float>& blob) {
+  hsize_t dims[HDF5_NUM_DIMS];
+  dims[0] = blob.num();
+  dims[1] = blob.channels();
+  dims[2] = blob.height();
+  dims[3] = blob.width();
+  herr_t status = H5LTmake_dataset_float(
+      file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
+  CHECK_GE(status, 0) << "Failed to make float dataset " << dataset_name;
+}
+
+template <>
+void hdf5_save_nd_dataset<double>(
+    const hid_t file_id, const string dataset_name, const Blob<double>& blob) {
+  hsize_t dims[HDF5_NUM_DIMS];
+  dims[0] = blob.num();
+  dims[1] = blob.channels();
+  dims[2] = blob.height();
+  dims[3] = blob.width();
+  herr_t status = H5LTmake_dataset_double(
+      file_id, dataset_name.c_str(), HDF5_NUM_DIMS, dims, blob.cpu_data());
+  CHECK_GE(status, 0) << "Failed to make double dataset " << dataset_name;
+}
+
 }  // namespace caffe
