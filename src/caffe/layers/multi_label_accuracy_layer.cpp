@@ -7,6 +7,7 @@
 
 #include "caffe/layer.hpp"
 //#include "caffe/vision_layers.hpp"
+#include "caffe/layers/multi_label_accuracy_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
 
