@@ -72,6 +72,8 @@ models/*
 build
 .build_debug/*
 .build_release/*
+release/*
+debug/*
 distribute/*
 *.testbin
 *.bin

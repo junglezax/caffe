@@ -6,7 +6,8 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/vision_layers.hpp"
+//#include "caffe/vision_layers.hpp"
+#include "caffe/layers/multi_label_accuracy_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
 
@@ -31,7 +32,6 @@ void MultiLabelAccuracyLayer<Dtype>::SetUp(
   // top[1] = Specificity (TN/N),
   // top[2] = Harmonic Mean of Sens and Spec, 2/(P/TP+N/TN),
   (*top)[0]->Reshape(1, 3, 1, 1);
-  }
 }
 
 template <typename Dtype>
