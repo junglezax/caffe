@@ -280,21 +280,6 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 }
 #endif  // USE_OPENCV
 
-bool ReadImageToDatum(const string& filename, const int label,
-    const int height, const int width, const bool is_color, Datum* datum) {
-
-  if (ReadImage(filename, height, width, is_color, datum)) {
-    if (datum->label_size() > 0) {
-      datum->set_label(0, label);
-    } else {
-      datum->add_label(label);
-    }
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
     const int height, const int width, const bool is_color, Datum* datum) {
 
