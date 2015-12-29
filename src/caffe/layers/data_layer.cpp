@@ -9,6 +9,8 @@
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
 
+#include "lmdb.h"
+
 namespace caffe {
 
 template <typename Dtype>
