@@ -349,7 +349,7 @@ void ImageDataLayer<Dtype>::ShuffleImages0() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }*/
 
-/*template <typename Dtype>
+template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
   const int num_images = lines_.size();
   for (int i = 0; i < num_images; ++i) {
@@ -361,7 +361,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
   }
 }
 
-template <typename Dtype>
+/*template <typename Dtype>
 void ImageDataLayer<Dtype>::JoinPrefetchThread() {
   CHECK(!pthread_join(thread_, NULL)) << "Pthread joining failed.";
 }
