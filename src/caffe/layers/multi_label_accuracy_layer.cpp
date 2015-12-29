@@ -70,7 +70,7 @@ Dtype MultiLabelAccuracyLayer<Dtype>::Forward_cpu(
   (*top)[0]->mutable_cpu_data()[1] = true_negative / count_neg;
   (*top)[0]->mutable_cpu_data()[2] =
     2 / (count_pos / true_positive + count_neg / true_negative);
-  }
+  //}
   // MultiLabelAccuracy should not be used as a loss function.
   return Dtype(0);
 }
