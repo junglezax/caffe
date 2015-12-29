@@ -190,26 +190,10 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void DataLayer<Dtype>::CreatePrefetchThread() {
-  phase_ = Caffe::phase();
-  const bool prefetch_needs_rand = (phase_ == Caffe::TRAIN) &&
-      (this->layer_param_.data_param().mirror() ||
-       this->layer_param_.data_param().crop_size());
-  if (prefetch_needs_rand) {
-    const unsigned int prefetch_rng_seed = caffe_rng_rand();
-    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
-  } else {
-    prefetch_rng_.reset();
-  }
-  // Create the thread.
-  CHECK(!pthread_create(&thread_, NULL, DataLayerPrefetch<Dtype>,
-        static_cast<void*>(this))) << "Pthread execution failed.";
-}
-
 // This function is called on prefetch thread
 template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
+    //temply
   /*CPUTimer batch_timer;
   batch_timer.Start();
   double read_time = 0;
