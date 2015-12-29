@@ -323,7 +323,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
+/*template <typename Dtype>
 void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   phase_ = Caffe::phase();
   const bool prefetch_needs_rand =
@@ -347,7 +347,7 @@ void ImageDataLayer<Dtype>::ShuffleImages0() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
-}
+}*/
 
 template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
