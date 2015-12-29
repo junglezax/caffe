@@ -349,7 +349,7 @@ void ImageDataLayer<Dtype>::ShuffleImages0() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }*/
 
-template <typename Dtype>
+/*template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
   const int num_images = lines_.size();
   for (int i = 0; i < num_images; ++i) {
@@ -371,7 +371,7 @@ unsigned int ImageDataLayer<Dtype>::PrefetchRand() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   return (*prefetch_rng)();
-}
+}*/
 
 // This function is called on prefetch thread
 template <typename Dtype>
