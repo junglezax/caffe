@@ -121,7 +121,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
     image_file.read(pixels, rows * cols);
     label_file.read(&label, 1);
     datum.set_data(pixels, rows*cols);
-    datum.set_label(label);
+    datum.set_label(0, label); //temply
     string key_str = caffe::format_int(item_id, 8);
     datum.SerializeToString(&value);
 

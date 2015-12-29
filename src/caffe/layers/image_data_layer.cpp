@@ -340,16 +340,16 @@ void ImageDataLayer<Dtype>::CreatePrefetchThread() {
   // Create the thread.
   CHECK(!pthread_create(&thread_, NULL, ImageDataLayerPrefetch<Dtype>,
         static_cast<void*>(this))) << "Pthread execution failed.";
-}
-
-template <typename Dtype>
-void ImageDataLayer<Dtype>::ShuffleImages0() {
-  caffe::rng_t* prefetch_rng =
-      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
-  shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }*/
 
 template <typename Dtype>
+void ImageDataLayer<Dtype>::ShuffleImages() {
+  caffe::rng_t* prefetch_rng =
+      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  shuffle(lines_.begin(), lines_.end(), prefetch_rng);
+}
+
+/*template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
   const int num_images = lines_.size();
   for (int i = 0; i < num_images; ++i) {
@@ -359,7 +359,7 @@ void ImageDataLayer<Dtype>::ShuffleImages() {
     lines_.erase(lines_.begin() + rand_index);
     lines_.push_back(item);
   }
-}
+}*/
 
 /*template <typename Dtype>
 void ImageDataLayer<Dtype>::JoinPrefetchThread() {

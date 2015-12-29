@@ -183,12 +183,12 @@ bool ReadImageToDatum(const string& filename, const int label,
       cv::imencode("."+encoding, cv_img, buf);
       datum->set_data(std::string(reinterpret_cast<char*>(&buf[0]),
                       buf.size()));
-      // temply datum->set_label(label);
+      datum->set_label(0, label); //temply
       datum->set_encoded(true);
       return true;
     }
     CVMatToDatum(cv_img, datum);
-    //temply datum->set_label(label);
+    datum->set_label(0, label);//temply
     return true;
   } else {
     return false;
@@ -208,7 +208,7 @@ bool ReadFileToDatum(const string& filename, const int label,
     file.read(&buffer[0], size);
     file.close();
     datum->set_data(buffer);
-    //temply datum->set_label(label);
+    datum->set_label(0, label);//temply
     datum->set_encoded(true);
     return true;
   } else {
