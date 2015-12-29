@@ -58,7 +58,7 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
     }
   }
 
-  if (top->size() >= 1) {
+  if (top.size() >= 1) {
     top[0]->mutable_cpu_data()[0] = loss / num;
   }
 }

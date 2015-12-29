@@ -80,6 +80,7 @@ distribute/*
 python/caffe/proto/
 cmake_build
 .cmake_build
+1.log
 
 # Generated documentation
 docs/_site
