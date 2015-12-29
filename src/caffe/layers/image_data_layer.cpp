@@ -349,16 +349,16 @@ void ImageDataLayer<Dtype>::ShuffleImages0() {
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }*/
 
-template <typename Dtype>
+/*template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
-  /*const int num_images = lines_.size();
+  const int num_images = lines_.size();
   for (int i = 0; i < num_images; ++i) {
     const int max_rand_index = num_images - i;
     const int rand_index = PrefetchRand() % max_rand_index;
     pair<string, vector<int> > item = lines_[rand_index];
     lines_.erase(lines_.begin() + rand_index);
     lines_.push_back(item);
-  }*/
+  }
 }
 
 template <typename Dtype>
@@ -371,7 +371,7 @@ unsigned int ImageDataLayer<Dtype>::PrefetchRand() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   return (*prefetch_rng)();
-}
+}*/
 
 // This function is called on prefetch thread
 template <typename Dtype>
@@ -440,6 +440,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
+/*
 template <typename Dtype>
 Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       vector<Blob<Dtype>*>* top) {
@@ -455,7 +456,7 @@ Dtype ImageDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // Start a new prefetch thread
   CreatePrefetchThread();
   return Dtype(0.);
-}
+}*/
 
 INSTANTIATE_CLASS(ImageDataLayer);
 REGISTER_LAYER_CLASS(ImageData);
