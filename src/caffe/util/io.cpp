@@ -302,7 +302,7 @@ bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
   }
 }
 
-// Verifies format of data stored in HDF5 file and reshapes blob accordingly.
+/*// Verifies format of data stored in HDF5 file and reshapes blob accordingly.
 template <typename Dtype>
 void hdf5_load_nd_dataset_helper(
     hid_t file_id, const char* dataset_name_, int min_dim, int max_dim,
@@ -327,6 +327,6 @@ void hdf5_load_nd_dataset_helper(
     (dims.size() > 1) ? dims[1] : 1,
     (dims.size() > 2) ? dims[2] : 1,
     (dims.size() > 3) ? dims[3] : 1);
-}
+}*/
 
 }  // namespace caffe
