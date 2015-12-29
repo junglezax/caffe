@@ -88,26 +88,6 @@ cv::Mat ReadImageToCVMat(const string& filename,
   return cv_img;
 }
 
-bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
-    const int height, const int width, const bool is_color, Datum* datum) {
-
-  if (labels.size() > 0) {
-    CHECK(ReadImageToDatum(filename, labels[0],
-                         height, width, is_color, datum));
-    for (int i = 1 ; i < labels.size(); ++i) {
-      if (datum->label_size() <= i) {
-        datum->add_label(labels[i]);
-      } else {
-        datum->set_label(i,labels[i]);
-      }
-    }
-  } else {
-    CHECK(ReadImageToDatum(filename, height, width, is_color, datum));
-  }
-
-  return true;
-}
-
 bool ReadImage(const string& filename,
     const int height, const int width, const bool is_color, Datum* datum) {
   cv::Mat cv_img;
@@ -303,35 +283,38 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color, Datum* datum) {
 
-  CHECK(ReadImage(filename, height, width, is_color, datum));
-
-  if (datum->label_size() > 0){
-    datum->set_label(0,label);
+  if (ReadImage(filename, height, width, is_color, datum)) {
+    if (datum->label_size() > 0) {
+      datum->set_label(0, label);
+    } else {
+      datum->add_label(label);
+    }
+    return true;
   } else {
-    datum->add_label(label);
+    return false;
   }
-
-  return true;
 }
 
 bool ReadImageToDatum(const string& filename, const std::vector<int> labels,
     const int height, const int width, const bool is_color, Datum* datum) {
 
   if (labels.size() > 0) {
-    CHECK(ReadImageToDatum(filename, labels[0],
-                         height, width, is_color, datum));
-    for (int i = 1 ; i < labels.size(); ++i) {
-      if (datum->label_size() <= i) {
-        datum->add_label(labels[i]);
-      } else {
-        datum->set_label(i,labels[i]);
+    if (ReadImageToDatum(filename, labels[0],
+                         height, width, is_color, datum)) {
+      for (int i = 1 ; i < labels.size(); ++i) {
+        if (datum->label_size() <= i) {
+          datum->add_label(labels[i]);
+        } else {
+          datum->set_label(i, labels[i]);
+        }
       }
+      return true;
+    } else {
+      return false;
     }
   } else {
-    CHECK(ReadImage(filename, height, width, is_color, datum));
+    return ReadImage(filename, height, width, is_color, datum);
   }
-
-  return true;
 }
 
 // Verifies format of data stored in HDF5 file and reshapes blob accordingly.
