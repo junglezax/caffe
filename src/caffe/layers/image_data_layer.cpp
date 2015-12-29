@@ -61,7 +61,7 @@ void* ImageDataLayerPrefetch(void* layer_pointer) {
       CHECK(data.size()) << "Image cropping only support uint8 data";
       int h_off, w_off;
       // We only do random crop when we do training.
-      if (layer->phase_ == Caffe::TRAIN) {
+      if (layer->phase_ == TRAIN) {
         h_off = layer->PrefetchRand() % (height - crop_size);
         w_off = layer->PrefetchRand() % (width - crop_size);
       } else {
