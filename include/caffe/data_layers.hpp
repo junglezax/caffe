@@ -19,6 +19,8 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "caffe/vision_layers.hpp"
+
 namespace caffe {
 
 #define HDF5_DATA_DATASET_NAME "data"
