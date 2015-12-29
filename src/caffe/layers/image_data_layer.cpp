@@ -351,14 +351,14 @@ void ImageDataLayer<Dtype>::ShuffleImages0() {
 
 /*template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
-  const int num_images = lines_.size();
+  /*const int num_images = lines_.size();
   for (int i = 0; i < num_images; ++i) {
     const int max_rand_index = num_images - i;
     const int rand_index = PrefetchRand() % max_rand_index;
     pair<string, vector<int> > item = lines_[rand_index];
     lines_.erase(lines_.begin() + rand_index);
     lines_.push_back(item);
-  }
+  }*/
 }
 
 template <typename Dtype>
